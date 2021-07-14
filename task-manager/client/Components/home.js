@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, Button, KeyboardAvoidingView, Platform } from 'react-native';
 import { Entypo } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,24 +7,42 @@ import axios from 'axios';
 export default function Home({navigation}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const postData = () => {
-    var myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    
-    var raw = JSON.stringify({"email": email,"password": password});
-    
-    var requestOptions = {
-      method: 'POST',
-      headers: myHeaders,
-      body: raw,
-      redirect: 'follow'
-    };
-    
-    fetch("http://localhost:8080/api/auth/login", requestOptions)
-      .then(response => response.text())
-      .then(result => alert(result))
-      .catch(error => alert(error));
-  }
+
+    useEffect(() => {
+      const clearInputs = navigation.addListener('focus', () => {
+        setEmail("");
+        setPassword("");
+      });
+    }, [navigation]);
+
+    // Posting request to see if can login
+    const postData = () => {
+      var data = JSON.stringify({"email": email, "password": password});
+
+      var config = {
+        method: 'post',
+        url: 'https://react-native-task-manager.herokuapp.com/api/auth/login',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        data : data
+      };
+      
+      axios(config)
+      .then(function (response) {
+        const {token, username, id} = response.data;
+        alert('Welcome : ' + JSON.stringify(username));
+        navigation.navigate('TaskManager', {
+          token: JSON.stringify(token),
+          username: JSON.stringify(username),
+          userId: JSON.stringify(id),
+        })
+      })
+      .catch(function (error) {
+        alert('Email or password is wrong !'); 
+      });
+    }
+
     return (
         <KeyboardAvoidingView style={styles.background}
         enabled
@@ -37,7 +55,7 @@ export default function Home({navigation}) {
             <View style={styles.homeSection}>
               <View style={styles.logoSection}>
                 <Entypo name="tools" size={80} color="white"/>
-                <Text h1 style={styles.title}>Welcome to your task manager application</Text>
+                <Text h1 style={styles.title}>Welcome to your task manager application {apiURL}</Text>
               </View>
               <View>
                   <View>
@@ -48,7 +66,8 @@ export default function Home({navigation}) {
                         value={email}
                         onChangeText={(mail) => setEmail(mail)}
                         placeholder={'example@mail.com'}
-                        placeholderTextColor="white"
+                        autoCapitalize='none'
+                        placeholderTextColor="rgba(255,255,255,0.3)"
                         style={styles.txtInput}
                       />
                     </View>
@@ -60,14 +79,14 @@ export default function Home({navigation}) {
                         secureTextEntry={true}
                         onChangeText={(pass) => setPassword(pass)}
                         placeholder={'Password'}
-                        placeholderTextColor="white"
+                        placeholderTextColor="rgba(255,255,255,0.3)"
                         style={styles.txtInput}
                       />
                     </View>
                   </View>
                   <View style={styles.buttonSection}>
                     <Button
-                      title={'Signin'}
+                      title={'Sign In'}
                       color="#003399"
                       onPress={postData}
                     />

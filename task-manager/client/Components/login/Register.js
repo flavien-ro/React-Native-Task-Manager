@@ -1,11 +1,48 @@
-import React from 'react';
-import { StyleSheet, Text, View, TextInput, Button } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TextInput, Button, KeyboardAvoidingView, Platform } from 'react-native';
 import { Entypo } from '@expo/vector-icons'; 
 import { AntDesign } from '@expo/vector-icons'; 
 import { LinearGradient } from 'expo-linear-gradient';
+import axios from 'axios';
 
 export default function Register({navigation}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  // Posting request to see if can login
+    const postData = () => {
+        var data = JSON.stringify({"name": name, "email": email, "password": password});
+
+        var config = {
+          method: 'post',
+          url: 'https://react-native-task-manager.herokuapp.com/api/auth/register',
+          headers: { 
+            'Content-Type': 'application/json'
+          },
+          data : data
+        };
+        axios(config)
+        .then(function (response) {
+          const message = (JSON.stringify(response.data));
+          if (response.data.res) {
+            navigation.navigate('Home');
+            alert('User successfully created');
+          } else {
+            alert(message);
+          }
+        })
+        .catch(function (error) {
+          alert('Email already exists'); 
+        });
+    }
+
+
     return (
+      <KeyboardAvoidingView style={styles.background}
+        enabled
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}>
         <View style={styles.background}>
           <LinearGradient
           colors={['#4c669f', '#3b5998', '#192f6a']}
@@ -21,30 +58,35 @@ export default function Register({navigation}) {
                     <View style={styles.input}>
                       <AntDesign name="user" size={24} color="white" />
                       <TextInput
-                        // value={this.state.username}
-                        // onChangeText={(username) => this.setState({ username })}
-                        placeholder={'Username'}
-                        placeholderTextColor="white"
+                        name="name"
+                        value={name}
+                        onChangeText={(UserName) => setName(UserName)}
+                        placeholder={'Your name'}
+                        placeholderTextColor="rgba(255,255,255,0.3)"
                         style={styles.txtInput}
                       />
                     </View>
                     <View style={styles.input}>
                       <Entypo name="email" size={24} color="white" />
                       <TextInput
-                        // value={this.state.username}
-                        // onChangeText={(username) => this.setState({ username })}
+                        name="email"
+                        value={email}
+                        onChangeText={(mail) => setEmail(mail)}
+                        autoCapitalize='none'
                         placeholder={'example@mail.com'}
-                        placeholderTextColor="white"
+                        placeholderTextColor="rgba(255,255,255,0.3)"
                         style={styles.txtInput}
                       />
                     </View>
                     <View style={styles.input}>
                       <Entypo name="lock" size={24} color="white" />
                       <TextInput
-                        // value={this.state.username}
-                        // onChangeText={(username) => this.setState({ username })}
+                        name="password"
+                        value={password}
+                        secureTextEntry={true}
+                        onChangeText={(pass) => setPassword(pass)}
                         placeholder={'Password'}
-                        placeholderTextColor="white"
+                        placeholderTextColor="rgba(255,255,255,0.3)"
                         style={styles.txtInput}
                       />
                     </View>
@@ -53,7 +95,7 @@ export default function Register({navigation}) {
                     <Button
                       title={'Register'}
                       color="#003399"
-                      // onPress={this.onLogin.bind(this)}
+                      onPress={postData}
                     />
                   </View>
                 </View>
@@ -64,6 +106,7 @@ export default function Register({navigation}) {
             </View>
             </LinearGradient>
         </View>
+        </KeyboardAvoidingView>
     );
   }
   
@@ -111,6 +154,7 @@ const styles = StyleSheet.create({
     },
     txtInput: {
       color: 'white',
+      width: 200,
       fontSize: 18,
       paddingHorizontal: 15,
     },
